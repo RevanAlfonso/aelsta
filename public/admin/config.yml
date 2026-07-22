@@ -1,0 +1,22 @@
+backend:
+  name: github
+  repo: RevanAlfonso/aelsta
+  branch: main
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "blog"
+    label: "Artikel & Blog"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Judul Artikel", name: "title", widget: "string" }
+      - { label: "Tanggal Publish", name: "date", widget: "datetime" }
+      - { label: "Penulis", name: "author", widget: "string", default: "Aelsta Studio" }
+      - { label: "Kategori", name: "category", widget: "select", options: ["CMS & Technology", "Panduan Web", "SEO & Performa", "Strategi Bisnis"] }
+      - { label: "Ringkasan (Excerpt)", name: "excerpt", widget: "text" }
+      - { label: "Gambar Cover", name: "coverImage", widget: "image", required: false }
+      - { label: "Isi Konten Artikel", name: "body", widget: "markdown" }

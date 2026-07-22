@@ -9,17 +9,42 @@ import { ServicesSection } from './components/ServicesSection';
 import { PricingSection } from './components/PricingSection';
 import { PortfolioSection } from './components/PortfolioSection';
 import { ProcessSection } from './components/ProcessSection';
+import { BlogSection } from './components/BlogSection';
 import { TosSection } from './components/TosSection';
 import { FaqSection } from './components/FaqSection';
 import { CtaSection } from './components/CtaSection';
 import { Footer } from './components/Footer';
 import { ProjectInquiryModal } from './components/ProjectInquiryModal';
 import { TosModal } from './components/TosModal';
+import { BlogListPage } from './pages/BlogListPage';
+import { BlogDetailPage } from './pages/BlogDetailPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
+
+type RouteState = {
+  view: 'home' | 'blog-list' | 'blog-detail' | 'admin';
+  slug?: string;
+};
 
 export function App() {
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [tosModalOpen, setTosModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState('Business Website');
+
+  // Route State
+  const [route, setRoute] = useState<RouteState>(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/admin')) {
+      return { view: 'admin' };
+    }
+    if (path.startsWith('/blog/')) {
+      const slug = path.replace('/blog/', '');
+      return { view: 'blog-detail', slug };
+    }
+    if (path === '/blog') {
+      return { view: 'blog-list' };
+    }
+    return { view: 'home' };
+  });
 
   useEffect(() => {
     // Initialize Lenis Smooth Scroll
@@ -36,10 +61,45 @@ export function App() {
 
     requestAnimationFrame(raf);
 
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin')) {
+        setRoute({ view: 'admin' });
+      } else if (path.startsWith('/blog/')) {
+        const slug = path.replace('/blog/', '');
+        setRoute({ view: 'blog-detail', slug });
+      } else if (path === '/blog') {
+        setRoute({ view: 'blog-list' });
+      } else {
+        setRoute({ view: 'home' });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     return () => {
       lenis.destroy();
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
+
+  const navigateToHome = () => {
+    window.history.pushState({}, '', '/');
+    setRoute({ view: 'home' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToBlogList = () => {
+    window.history.pushState({}, '', '/blog');
+    setRoute({ view: 'blog-list' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToBlogDetail = (slug: string) => {
+    window.history.pushState({}, '', `/blog/${slug}`);
+    setRoute({ view: 'blog-detail', slug });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleOpenInquiry = (serviceName?: string) => {
     if (serviceName) {
@@ -48,6 +108,52 @@ export function App() {
     setInquiryModalOpen(true);
   };
 
+  // Render Admin Dashboard Page
+  if (route.view === 'admin') {
+    return <AdminDashboardPage onNavigateHome={navigateToHome} />;
+  }
+
+  // Render Dedicated Blog List Page
+  if (route.view === 'blog-list') {
+    return (
+      <div className="min-h-screen bg-white text-neutral-900 selection:bg-blue-600 selection:text-white">
+        <Header onOpenInquiry={handleOpenInquiry} />
+        <BlogListPage
+          onNavigateBack={navigateToHome}
+          onSelectPost={navigateToBlogDetail}
+        />
+        <Footer />
+        <ProjectInquiryModal
+          isOpen={inquiryModalOpen}
+          onClose={() => setInquiryModalOpen(false)}
+          initialService={selectedService}
+        />
+      </div>
+    );
+  }
+
+  // Render Dedicated Standalone Blog Detail Article Page
+  if (route.view === 'blog-detail' && route.slug) {
+    return (
+      <div className="min-h-screen bg-white text-neutral-900 selection:bg-blue-600 selection:text-white">
+        <Header onOpenInquiry={handleOpenInquiry} />
+        <BlogDetailPage
+          slug={route.slug}
+          onNavigateBack={navigateToBlogList}
+          onNavigateToPost={navigateToBlogDetail}
+          onOpenInquiry={() => handleOpenInquiry('Custom Website')}
+        />
+        <Footer />
+        <ProjectInquiryModal
+          isOpen={inquiryModalOpen}
+          onClose={() => setInquiryModalOpen(false)}
+          initialService={selectedService}
+        />
+      </div>
+    );
+  }
+
+  // Render Main Home Page
   return (
     <div className="min-h-screen bg-white text-neutral-900 selection:bg-blue-600 selection:text-white">
       {/* Fixed Navbar */}
@@ -78,6 +184,12 @@ export function App() {
 
         {/* Section 8: Development Process Timeline */}
         <ProcessSection />
+
+        {/* Decap CMS Blog Section */}
+        <BlogSection
+          onSelectPost={navigateToBlogDetail}
+          onOpenBlogList={navigateToBlogList}
+        />
 
         {/* TOS Section */}
         <TosSection onOpenTosModal={() => setTosModalOpen(true)} />

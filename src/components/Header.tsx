@@ -27,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenInquiry }) => {
     { name: t.nav.pricing, href: '#pricing' },
     { name: t.nav.work, href: '#portfolio' },
     { name: t.nav.process, href: '#process' },
+    { name: 'Blog', href: '#blog' },
     { name: t.nav.tos, href: '#tos' },
     { name: t.nav.faq, href: '#faq' },
   ];
